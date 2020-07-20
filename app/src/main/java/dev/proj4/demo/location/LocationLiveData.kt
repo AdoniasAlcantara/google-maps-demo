@@ -5,15 +5,12 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.LiveData
 import com.google.android.gms.location.*
-import dev.proj4.demo.location.LocationUpdate.Available
-import dev.proj4.demo.location.LocationUpdate.Unavailable
+import dev.proj4.demo.location.LocationUpdate.*
 
 class LocationLiveData(
     private val client: FusedLocationProviderClient,
     private val settings: LocationRequest
 ) : LiveData<LocationUpdate>() {
-
-    private var isLocationAvailable = false
 
     @RequiresPermission(ACCESS_FINE_LOCATION)
     override fun onActive() {
@@ -31,18 +28,25 @@ class LocationLiveData(
         override fun onLocationResult(result: LocationResult?) {
             val location = result?.lastLocation ?: return
 
-            if (isLocationAvailable) {
+            if (value !is Unavailable) {
                 value = Available(location)
                 Log.d(TAG, "Location: lat ${location.latitude}, lng ${location.longitude}")
             }
         }
 
         override fun onLocationAvailability(availability: LocationAvailability?) {
-            isLocationAvailable = availability?.isLocationAvailable ?: return
+            val isAvailable = availability?.isLocationAvailable ?: return
 
-            if (!isLocationAvailable) {
-                value = Unavailable
-                Log.d(TAG, "Location: unavailable")
+            when {
+                !isAvailable -> {
+                    value = Unavailable
+                    Log.d(TAG, "Location: unavailable")
+                }
+
+                isAvailable && value is Unavailable -> {
+                    value = Searching
+                    Log.d(TAG, "Location: searching")
+                }
             }
         }
     }
