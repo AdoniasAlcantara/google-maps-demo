@@ -3,14 +3,15 @@ package dev.proj4.demo.ui
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.observe
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.BitmapDescriptorFactory.HUE_VIOLET
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.maps.android.ktx.addMarker
+import com.google.maps.android.ktx.awaitMap
 import dev.proj4.demo.R
 import dev.proj4.demo.location.LocationLiveData
 import dev.proj4.demo.location.LocationUpdate.Available
@@ -25,49 +26,55 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private val locationLiveData: LocationLiveData by inject()
     private var isObservingLocationUpdates = false
 
-    private var map: GoogleMap? = null
-    private var marker: Marker? = null
+    private lateinit var map: GoogleMap
+    private lateinit var locationMarker: Marker
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        supportFragmentManager.findFragmentById(R.id.mapHolder)?.let { fragment ->
-            fragment as SupportMapFragment
-            fragment.getMapAsync(::onMapReady)
+        lifecycleScope.launchWhenCreated {
+            setUpMap()
+            setUpLocationUpdates()
         }
-
-        setUpLocationUpdates()
     }
 
-    private fun onMapReady(googleMap: GoogleMap) {
-        if (map != null) return
+    private suspend fun setUpMap() {
+        if (::map.isInitialized) return
+
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.mapHolder)
+        val googleMap = (mapFragment as SupportMapFragment).awaitMap()
+
+        locationMarker = googleMap.addMarker {
+            val defaultPosition = LatLng(0.0, 0.0)
+            position(defaultPosition)
+
+            val pinpoint = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
+            icon(pinpoint)
+
+            visible(false)
+        }
 
         map = googleMap
-
-        val makerOptions = MarkerOptions()
-            .position(LatLng(0.0, 0.0))
-            .icon(BitmapDescriptorFactory.defaultMarker(HUE_VIOLET))
-            .visible(false)
-
-        marker = googleMap.addMarker(makerOptions)
     }
 
     private fun setUpLocationUpdates() = withPermissionsCheck(
         ACCESS_FINE_LOCATION,
-        onShowRationale = PermissionRequest::proceed
-    ) {
-        if (!isObservingLocationUpdates) {
-            isObservingLocationUpdates = true
+        onShowRationale = PermissionRequest::proceed,
+        requiresPermission = ::observeLocationUpdates
+    )
 
-            locationLiveData.observe(this) { update ->
-                when (update) {
-                    is Available -> marker?.let {
-                        it.position = update.location.toLatLng()
-                        it.isVisible = true
-                    }
+    private fun observeLocationUpdates() {
+        if (isObservingLocationUpdates) return
 
-                    is Unavailable -> marker?.isVisible = false
+        isObservingLocationUpdates = true
+        locationLiveData.observe(this) { update ->
+            when (update) {
+                is Available -> locationMarker.apply {
+                    position = update.location.toLatLng()
+                    isVisible = true
                 }
+
+                is Unavailable -> locationMarker.isVisible = false
             }
         }
     }
