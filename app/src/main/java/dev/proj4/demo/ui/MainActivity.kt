@@ -15,6 +15,7 @@ import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.awaitMap
 import dev.proj4.demo.R
 import dev.proj4.demo.databinding.ActivityMainBinding
+import dev.proj4.demo.location.LocationSettingsResolver
 import dev.proj4.demo.location.LocationUpdate.*
 import dev.proj4.demo.utils.toLatLng
 import org.koin.android.viewmodel.ext.android.viewModel
@@ -24,17 +25,18 @@ import permissions.dispatcher.ktx.withPermissionsCheck
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModel()
+    private val settingsResolver by lazy { LocationSettingsResolver(this, activityResultRegistry) }
     private var isObservingLocationUpdates = false
 
-    private lateinit var binding: ActivityMainBinding
+    private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
     private lateinit var map: GoogleMap
     private lateinit var locationMarker: Marker
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        lifecycle.addObserver(settingsResolver)
 
         lifecycleScope.launchWhenCreated {
             setUpMap()
@@ -71,7 +73,8 @@ class MainActivity : AppCompatActivity() {
             observeLocationUpdates()
 
             if (ensureSettings) {
-                viewModel.ensureLocationSettingsMeet(activityResultRegistry)
+                val locationRequest = viewModel.locationUpdates.request
+                settingsResolver.ensureLocationSettingsMeet(locationRequest)
             }
         }
     )

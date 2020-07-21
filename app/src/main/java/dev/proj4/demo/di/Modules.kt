@@ -21,5 +21,5 @@ val services = module {
 }
 
 val viewModels = module {
-    viewModel { MainViewModel(androidContext(), get()) }
+    viewModel { MainViewModel(get()) }
 }
