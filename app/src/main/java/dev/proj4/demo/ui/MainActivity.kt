@@ -38,8 +38,13 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launchWhenCreated {
             setUpMap()
+            setUpMapControls()
             setUpLocationUpdates()
         }
+    }
+
+    private fun setUpMapControls() {
+        binding.buttonLocation.setOnClickListener { setUpLocationUpdates(true) }
     }
 
     private suspend fun setUpMap() {
