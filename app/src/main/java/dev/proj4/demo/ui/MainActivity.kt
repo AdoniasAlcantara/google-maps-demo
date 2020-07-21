@@ -15,16 +15,15 @@ import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.awaitMap
 import dev.proj4.demo.R
 import dev.proj4.demo.databinding.ActivityMainBinding
-import dev.proj4.demo.location.LocationLiveData
 import dev.proj4.demo.location.LocationUpdate.*
 import dev.proj4.demo.utils.toLatLng
-import org.koin.android.ext.android.inject
+import org.koin.android.viewmodel.ext.android.viewModel
 import permissions.dispatcher.PermissionRequest
 import permissions.dispatcher.ktx.withPermissionsCheck
 
 class MainActivity : AppCompatActivity() {
 
-    private val locationLiveData: LocationLiveData by inject()
+    private val viewModel: MainViewModel by viewModel()
     private var isObservingLocationUpdates = false
 
     private lateinit var binding: ActivityMainBinding
@@ -60,10 +59,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setUpLocationUpdates() = withPermissionsCheck(
+    private fun setUpLocationUpdates(ensureSettings: Boolean = false) = withPermissionsCheck(
         ACCESS_FINE_LOCATION,
         onShowRationale = PermissionRequest::proceed,
-        requiresPermission = ::observeLocationUpdates
+        requiresPermission = {
+            observeLocationUpdates()
+
+            if (ensureSettings) {
+                viewModel.ensureLocationSettingsMeet(activityResultRegistry)
+            }
+        }
     )
 
     private fun observeLocationUpdates() {
@@ -71,7 +76,7 @@ class MainActivity : AppCompatActivity() {
 
         isObservingLocationUpdates = true
 
-        locationLiveData.observe(this) { update ->
+        viewModel.locationUpdates.observe(this) { update ->
             when (update) {
                 is Available -> {
                     locationMarker.position = update.location.toLatLng()

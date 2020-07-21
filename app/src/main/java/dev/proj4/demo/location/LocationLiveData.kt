@@ -8,13 +8,13 @@ import com.google.android.gms.location.*
 import dev.proj4.demo.location.LocationUpdate.*
 
 class LocationLiveData(
-    private val client: FusedLocationProviderClient,
-    private val settings: LocationRequest
+    val client: FusedLocationProviderClient,
+    val request: LocationRequest
 ) : LiveData<LocationUpdate>() {
 
     @RequiresPermission(ACCESS_FINE_LOCATION)
     override fun onActive() {
-        client.requestLocationUpdates(settings, callback, null)
+        client.requestLocationUpdates(request, callback, null)
         Log.i(TAG, "Location updates started")
     }
 

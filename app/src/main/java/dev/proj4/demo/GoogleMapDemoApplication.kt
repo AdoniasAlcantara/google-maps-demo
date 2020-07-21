@@ -2,6 +2,7 @@ package dev.proj4.demo
 
 import android.app.Application
 import dev.proj4.demo.di.services
+import dev.proj4.demo.di.viewModels
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -13,7 +14,7 @@ class GoogleMapDemoApplication : Application() {
 
         startKoin {
             androidContext(applicationContext)
-            modules(services)
+            modules(viewModels, services)
         }
     }
 }
