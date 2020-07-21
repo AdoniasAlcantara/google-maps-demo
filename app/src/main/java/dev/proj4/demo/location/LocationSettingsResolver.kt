@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 import androidx.lifecycle.Lifecycle.Event.ON_CREATE
 import androidx.lifecycle.Lifecycle.Event.ON_DESTROY
 import androidx.lifecycle.LifecycleObserver
@@ -27,12 +27,8 @@ class LocationSettingsResolver(
 
     @OnLifecycleEvent(ON_CREATE)
     fun register() {
-        resolveSettings = registry.register(
-            REQUEST_LOCATION_SETTINGS,
-            ActivityResultContracts.StartIntentSenderForResult()
-        ) {
-            /* Ignore result */
-        }
+        val contract = StartIntentSenderForResult()
+        resolveSettings = registry.register(REQUEST_KEY, contract) { /* Ignore result */ }
     }
 
     @OnLifecycleEvent(ON_DESTROY)
@@ -68,6 +64,6 @@ class LocationSettingsResolver(
     }
 
     private companion object {
-        const val REQUEST_LOCATION_SETTINGS = "locationSettings"
+        const val REQUEST_KEY = "locationSettings"
     }
 }

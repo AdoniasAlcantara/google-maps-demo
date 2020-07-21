@@ -10,7 +10,7 @@ import dev.proj4.demo.location.LocationUpdate.*
 class LocationLiveData(
     val client: FusedLocationProviderClient,
     val request: LocationRequest
-) : LiveData<LocationUpdate>() {
+) : LiveData<LocationUpdate>(Unavailable) {
 
     @RequiresPermission(ACCESS_FINE_LOCATION)
     override fun onActive() {
