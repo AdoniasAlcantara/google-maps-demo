@@ -7,7 +7,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
 @Suppress("unused")
-class GoogleMapDemoApplication : Application() {
+class GoogleMapsDemoApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()

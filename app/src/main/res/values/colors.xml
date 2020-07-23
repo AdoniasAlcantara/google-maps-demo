@@ -4,5 +4,6 @@
     <color name="primary">#6200EE</color>
     <color name="primaryDark">#3700B3</color>
     <color name="accent">#6200EE</color>
+    <color name="translucent">#40000000</color>
 
 </resources>
